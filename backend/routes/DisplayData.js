@@ -1,22 +1,34 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-router.post('/foodData', async (req, res) => {
+router.post("/foodData", async (req, res) => {
   try {
-    const foodItemsCollection = mongoose.connection.db.collection("food_items");
-    const foodCategoryCollection = mongoose.connection.db.collection("foodCategory");
+    // Ensure MongoDB is connected
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(500).json({
+        error: "Database not connected",
+      });
+    }
 
-    const foodItems = await foodItemsCollection.find({}).toArray();
-    const foodCategories = await foodCategoryCollection.find({}).toArray();
+    const db = mongoose.connection.db;
+
+    const foodItems = await db
+      .collection("food_items")
+      .find({})
+      .toArray();
+
+    const foodCategories = await db
+      .collection("foodCategory")
+      .find({})
+      .toArray();
 
     res.json({
       foodItems,
-      foodCategories
+      foodCategories,
     });
-
   } catch (error) {
-    console.error(error.message);
+    console.error("FoodData API error:", error);
     res.status(500).json({ error: "Server error" });
   }
 });
