@@ -124,7 +124,7 @@ export default function Home() {
 
   const loadData = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/foodData", {
+      const res = await fetch("https://kraving-backend.onrender.com/api/displaydata", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });

@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const mongoURI =
-  "mongodb+srv://maazt254:maaz1234@cluster0.tpq7q1j.mongodb.net/kravingmern?retryWrites=true&w=majority";
+  "mongodb+srv://umarabd104:kraving123@cluster0.q0gasqt.mongodb.net/?appName=Cluster0";
 
 
 
