@@ -124,14 +124,24 @@ export default function Home() {
 
   const loadData = async () => {
     try {
-      const res = await fetch("https://kraving-backend.onrender.com/api/displaydata", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
+      const res = await fetch(
+        "https://kraving-backend.onrender.com/api/foodData",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch data");
+      }
+
       const data = await res.json();
 
-      setFoodItem(data.foodItems);
-      setFoodCat(data.foodCategories);
+      setFoodItem(data.foodItems || []);
+      setFoodCat(data.foodCategories || []);
     } catch (error) {
       console.error("Fetch error:", error);
     }
@@ -144,7 +154,6 @@ export default function Home() {
   return (
     <>
       <Navbar search={search} setSearch={setSearch} />
-
       <Carousel />
 
       {/* Food Section */}
@@ -152,40 +161,41 @@ export default function Home() {
         {foodCat.length > 0 ? (
           foodCat.map((cat) => (
             <div key={cat._id} className="mb-5">
-              <h3 className="kraving-category-title">{cat.CategoryName}</h3>
+              <h3 className="kraving-category-title">
+                {cat.CategoryName}
+              </h3>
               <hr className="kraving-category-divider" />
 
               <div className="row g-4">
-                {foodItem.length > 0 ? (
-                  foodItem
-                    .filter(
-                      (item) =>
-                        item.CategoryName === cat.CategoryName &&
-                        item.name.toLowerCase().includes(search.toLowerCase())
-                    )
-                    .map((item) => {
-                      return (
-                        <div key={item._id} className="col-12 col-sm-6 col-md-4 col-lg-3">
-                          <Card
-                            foodId={item._id}
-                            foodName={item.name}
-                            options={item.options}
-                            imgSrc={item.img}
-                          />
-                        </div>
-                      );
-                    })
-                ) : (
-                  <div className="col-12">
-                    <p className="text-muted">No items found in this category</p>
-                  </div>
-                )}
+                {foodItem
+                  .filter(
+                    (item) =>
+                      item.CategoryName === cat.CategoryName &&
+                      item.name
+                        .toLowerCase()
+                        .includes(search.toLowerCase())
+                  )
+                  .map((item) => (
+                    <div
+                      key={item._id}
+                      className="col-12 col-sm-6 col-md-4 col-lg-3"
+                    >
+                      <Card
+                        foodId={item._id}
+                        foodName={item.name}
+                        options={item.options}
+                        imgSrc={item.img}
+                      />
+                    </div>
+                  ))}
               </div>
             </div>
           ))
         ) : (
           <div className="text-center py-5">
-            <p className="text-muted fs-5">Loading delicious options...</p>
+            <p className="text-muted fs-5">
+              Loading delicious options...
+            </p>
           </div>
         )}
       </div>
