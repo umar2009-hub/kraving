@@ -19,7 +19,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173", // local frontend
-      "https://kraving.netlify.app" // production frontend (change if needed)
+      "https://kraving-frontend.netlify.app" // production frontend (change if needed)
     ],
     credentials: true
   })
