@@ -125,7 +125,7 @@ export default function Home() {
   const loadData = async () => {
     try {
       const res = await fetch(
-        "https://kraving-backend.onrender.com/api/foodData",
+        `${import.meta.env.VITE_API_URL}/api/auth/foodData`,
         {
           method: "POST",
           headers: {
