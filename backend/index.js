@@ -18,8 +18,8 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: [
-      "http://localhost:5173", // local frontend
-      "https://kraving-frontend.netlify.app" // production frontend (change if needed)
+      "http://localhost:5173",
+      "https://kraving-frontend.netlify.app"
     ],
     credentials: true
   })
@@ -37,12 +37,11 @@ mongoDBconnect()
   .then(() => {
     console.log("✅ DB connected, registering routes...");
 
-    // Existing routes (UNCHANGED)
     app.use("/api", require("./routes/CreateUser"));
     app.use("/api", require("./routes/DisplayData"));
     app.use("/api", require("./routes/OrderData"));
 
-    // 🔐 Auth routes (NEW)
+    // Auth routes
     app.use("/api/auth", require("./routes/auth"));
 
     app.listen(port, () => {

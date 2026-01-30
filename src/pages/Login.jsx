@@ -16,17 +16,14 @@ export default function Login() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/login",
+        `${import.meta.env.VITE_API_URL}/api/auth/login`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
-          credentials: "include", // 🔥 REQUIRED FOR COOKIES
-          body: JSON.stringify({
-            email: loginDetails.email,
-            password: loginDetails.password
-          })
+          credentials: "include",
+          body: JSON.stringify(loginDetails)
         }
       );
 
@@ -37,10 +34,7 @@ export default function Login() {
         return;
       }
 
-      // ✅ Update global auth state
       setUser(data.user);
-
-      // ✅ Redirect
       navigate("/");
     } catch (err) {
       console.error("Login error:", err);
@@ -56,63 +50,35 @@ export default function Login() {
   };
 
   return (
-    <div
-      className="d-flex justify-content-center align-items-center"
-      style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}
-    >
-      <div
-        className="card shadow-sm"
-        style={{ width: "420px", borderRadius: "12px" }}
-      >
-        <div className="card-body p-4">
-          <h3 className="text-center mb-4 fw-bold">Welcome Back</h3>
+    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
+      <div className="card p-4" style={{ width: "420px" }}>
+        <h3 className="text-center mb-4">Welcome Back</h3>
 
-          <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label className="form-label fw-semibold">Email</label>
-              <input
-                type="email"
-                className="form-control"
-                name="email"
-                value={loginDetails.email}
-                onChange={onChange}
-                required
-              />
-            </div>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="email"
+            className="form-control mb-3"
+            name="email"
+            placeholder="Email"
+            onChange={onChange}
+            required
+          />
 
-            <div className="mb-4">
-              <label className="form-label fw-semibold">Password</label>
-              <input
-                type="password"
-                className="form-control"
-                name="password"
-                value={loginDetails.password}
-                onChange={onChange}
-                required
-              />
-            </div>
+          <input
+            type="password"
+            className="form-control mb-3"
+            name="password"
+            placeholder="Password"
+            onChange={onChange}
+            required
+          />
 
-            <button
-              type="submit"
-              className="btn btn-success w-100 mb-3"
-              style={{ borderRadius: "8px" }}
-            >
-              Login
-            </button>
+          <button className="btn btn-success w-100">Login</button>
 
-            <div className="text-center">
-              <span className="text-muted">New here?</span>
-            </div>
-
-            <Link
-              to="/signup"
-              className="btn btn-outline-dark w-100 mt-2"
-              style={{ borderRadius: "8px" }}
-            >
-              Create an account
-            </Link>
-          </form>
-        </div>
+          <Link to="/signup" className="btn btn-outline-dark w-100 mt-2">
+            Create an account
+          </Link>
+        </form>
       </div>
     </div>
   );

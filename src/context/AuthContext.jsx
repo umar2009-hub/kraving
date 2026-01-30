@@ -1,50 +1,85 @@
-import { createContext, useContext, useEffect, useState } from "react";
+const User = require("../models/User");
+const bcrypt = require("bcrypt");
+const {
+  generateAccessToken,
+  generateRefreshToken
+} = require("../utils/generateToken");
 
-const AuthContext = createContext();
+// REGISTER
+exports.register = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: "All fields required" });
+    }
 
-  // CHECK AUTH ON PAGE LOAD
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/auth/me", {
-          credentials: "include"
-        });
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ error: "User already exists" });
+    }
 
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data.user);
-        } else {
-          setUser(null);
-        }
-      } catch {
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    checkAuth();
-  }, []);
-
-  // LOGOUT
-  const logout = async () => {
-    await fetch("http://localhost:5000/api/auth/logout", {
-      method: "POST",
-      credentials: "include"
+    await User.create({
+      name,
+      email,
+      password: hashedPassword
     });
 
-    setUser(null);
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, setUser, logout, loading }}>
-      {children}
-    </AuthContext.Provider>
-  );
+    return res.status(201).json({
+      message: "User registered successfully"
+    });
+  } catch (err) {
+    console.error("Register error:", err);
+    return res.status(500).json({ error: "Server error" });
+  }
 };
 
-export const useAuth = () => useContext(AuthContext);
+// LOGIN
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
+    const isProd = process.env.NODE_ENV === "production";
+
+    res
+      .cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: "none",
+        maxAge: 15 * 60 * 1000
+      })
+      .cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: "none",
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      })
+      .status(200)
+      .json({
+        message: "Login successful",
+        user: {
+          id: user._id,
+          name: user.name,
+          role: user.role
+        }
+      });
+  } catch (err) {
+    console.error("Login error:", err);
+    return res.status(500).json({ error: "Server error" });
+  }
+};

@@ -16,12 +16,13 @@ export default function Signup() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/register",
+        `${import.meta.env.VITE_API_URL}/api/auth/register`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
+          credentials: "include",
           body: JSON.stringify({
             name: formData.name,
             email: formData.email,
@@ -53,90 +54,22 @@ export default function Signup() {
   };
 
   return (
-    <div
-      className="d-flex justify-content-center align-items-center"
-      style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}
-    >
-      <div
-        className="card shadow-sm"
-        style={{ width: "480px", borderRadius: "12px" }}
-      >
-        <div className="card-body p-4">
-          <h3 className="text-center mb-4 fw-bold">Create Account</h3>
+    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
+      <div className="card p-4" style={{ width: "480px" }}>
+        <h3 className="text-center mb-4">Create Account</h3>
 
-          <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label className="form-label fw-semibold">Name</label>
-              <input
-                type="text"
-                className="form-control"
-                name="name"
-                value={formData.name}
-                onChange={onChange}
-                required
-              />
-            </div>
+        <form onSubmit={handleSubmit}>
+          <input className="form-control mb-2" name="name" placeholder="Name" onChange={onChange} required />
+          <input className="form-control mb-2" name="email" placeholder="Email" onChange={onChange} required />
+          <input className="form-control mb-2" name="password" type="password" placeholder="Password" onChange={onChange} required />
+          <input className="form-control mb-3" name="geolocation" placeholder="Address" onChange={onChange} required />
 
-            <div className="mb-3">
-              <label className="form-label fw-semibold">Email address</label>
-              <input
-                type="email"
-                className="form-control"
-                name="email"
-                value={formData.email}
-                onChange={onChange}
-                required
-              />
-              <div className="form-text">
-                We'll never share your email.
-              </div>
-            </div>
+          <button className="btn btn-success w-100">Sign Up</button>
 
-            <div className="mb-3">
-              <label className="form-label fw-semibold">Password</label>
-              <input
-                type="password"
-                className="form-control"
-                name="password"
-                value={formData.password}
-                onChange={onChange}
-                required
-              />
-            </div>
-
-            <div className="mb-4">
-              <label className="form-label fw-semibold">Address</label>
-              <input
-                type="text"
-                className="form-control"
-                name="geolocation"
-                value={formData.geolocation}
-                onChange={onChange}
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-success w-100 mb-3"
-              style={{ borderRadius: "8px" }}
-            >
-              Sign Up
-            </button>
-
-            <div className="text-center">
-              <span className="text-muted">Already have an account?</span>
-            </div>
-
-            <Link
-              to="/login"
-              className="btn btn-outline-dark w-100 mt-2"
-              style={{ borderRadius: "8px" }}
-            >
-              Login
-            </Link>
-          </form>
-        </div>
+          <Link to="/login" className="btn btn-outline-dark w-100 mt-2">
+            Login
+          </Link>
+        </form>
       </div>
     </div>
   );
