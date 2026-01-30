@@ -1,85 +1,70 @@
-const User = require("../models/User");
-const bcrypt = require("bcrypt");
-const {
-  generateAccessToken,
-  generateRefreshToken
-} = require("../utils/generateToken");
+import { createContext, useContext, useEffect, useState } from "react";
 
-// REGISTER
-exports.register = async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
+const AuthContext = createContext(null);
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: "All fields required" });
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // 🔍 Check logged-in user on app load
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/auth/me`,
+          {
+            credentials: "include"
+          }
+        );
+
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Auth check failed", err);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  // 🚪 LOGOUT FUNCTION (THIS WAS MISSING)
+  const logout = async () => {
+    try {
+      await fetch(
+        `${import.meta.env.VITE_API_URL}/api/auth/logout`,
+        {
+          method: "POST",
+          credentials: "include"
+        }
+      );
+    } catch (err) {
+      console.error("Logout failed", err);
+    } finally {
+      setUser(null);
     }
+  };
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(409).json({ error: "User already exists" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    await User.create({
-      name,
-      email,
-      password: hashedPassword
-    });
-
-    return res.status(201).json({
-      message: "User registered successfully"
-    });
-  } catch (err) {
-    console.error("Register error:", err);
-    return res.status(500).json({ error: "Server error" });
-  }
+  return (
+    <AuthContext.Provider
+      value={{ user, setUser, logout, loading }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-// LOGIN
-exports.login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-
-    const accessToken = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
-
-    const isProd = process.env.NODE_ENV === "production";
-
-    res
-      .cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: isProd,
-        sameSite: "none",
-        maxAge: 15 * 60 * 1000
-      })
-      .cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: isProd,
-        sameSite: "none",
-        maxAge: 7 * 24 * 60 * 60 * 1000
-      })
-      .status(200)
-      .json({
-        message: "Login successful",
-        user: {
-          id: user._id,
-          name: user.name,
-          role: user.role
-        }
-      });
-  } catch (err) {
-    console.error("Login error:", err);
-    return res.status(500).json({ error: "Server error" });
+// ✅ CUSTOM HOOK
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used inside AuthProvider");
   }
+  return context;
 };
