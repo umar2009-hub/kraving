@@ -1,27 +1,49 @@
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
 const app = express();
 const port = process.env.PORT || 5000;
 
+// DB connection
 const mongoDBconnect = require("./db");
 
+// ─────────────────────────────
+// Middlewares
+// ─────────────────────────────
 app.use(express.json());
-app.use(cors({ origin: "*" }));
+app.use(cookieParser());
 
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173", // local frontend
+      "https://kraving.netlify.app" // production frontend (change if needed)
+    ],
+    credentials: true
+  })
+);
+
+// Health check
 app.get("/", (req, res) => {
-  res.send("Hello World!!!");
+  res.send("Kraving backend is running 🚀");
 });
 
-// 🚀 Start server ONLY after DB connects
+// ─────────────────────────────
+// Start server ONLY after DB connects
+// ─────────────────────────────
 mongoDBconnect()
   .then(() => {
-    console.log("✅ DB ready, starting server...");
+    console.log("✅ DB connected, registering routes...");
 
+    // Existing routes (UNCHANGED)
     app.use("/api", require("./routes/CreateUser"));
     app.use("/api", require("./routes/DisplayData"));
     app.use("/api", require("./routes/OrderData"));
+
+    // 🔐 Auth routes (NEW)
+    app.use("/api/auth", require("./routes/auth"));
 
     app.listen(port, () => {
       console.log(`✅ Server running on port ${port}`);
