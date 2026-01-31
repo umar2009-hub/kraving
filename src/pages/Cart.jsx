@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useCart, useDispatchCart } from "../components/CartContext";
-import { useAuth } from "../context/AuthContext"; // NEW
+import { useAuth } from "../context/AuthContext";
 
 export default function Cart() {
   const data = useCart();
   const dispatch = useDispatchCart();
-  const { user } = useAuth(); // NEW
+  const { user } = useAuth();
   const [orderSuccess, setOrderSuccess] = useState(false);
 
   if (data.length === 0) {
@@ -20,46 +20,64 @@ export default function Cart() {
 
   const handleCheckout = async () => {
     try {
-      const userEmail = user?.email;
-
-      if (!userEmail) {
+      if (!user?.email) {
         alert("Please login again");
         return;
       }
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orderData`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          email: userEmail,
-          order_data: [
-            {
-              order_date: new Date().toDateString(),
-              items: data
-            }
-          ]
-        }),
-      });
+      // CLEAN ITEMS FOR BACKEND
+      const itemsForBackend = data.map((item) => ({
+        name: item.name,
+        qty: item.qty,
+        size: item.size,
+        price: item.price
+      }));
 
-      if (!response.ok) {
-        const err = await response.json();
-        console.error(err);
-        throw new Error("Checkout failed");
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/orderData`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            email: user.email,
+            order_data: [
+              {
+                order_date: new Date().toDateString(),
+                items: itemsForBackend
+              }
+            ]
+          })
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || result.success === false) {
+        console.error("ORDER ERROR:", result);
+        alert("Checkout failed");
+        return;
       }
 
+      // CLEAR CART
       dispatch({ type: "DROP" });
 
+      // SUCCESS MESSAGE
       setOrderSuccess(true);
       setTimeout(() => setOrderSuccess(false), 2500);
 
     } catch (error) {
-      console.error(error);
+      console.error("CHECKOUT ERROR:", error);
       alert("Something went wrong during checkout");
     }
   };
 
-  const totalPrice = data.reduce((total, food) => total + food.price * food.qty, 0);
+  const totalPrice = data.reduce(
+    (total, food) => total + food.price * food.qty,
+    0
+  );
 
   return (
     <div className="container my-5" style={{ minHeight: "60vh" }}>
@@ -70,7 +88,7 @@ export default function Cart() {
           className="alert alert-success text-center fw-bold"
           style={{
             animation: "pop 0.5s ease-in-out",
-            borderRadius: "10px",
+            borderRadius: "10px"
           }}
         >
           🎉 Thank you for your order!
@@ -99,11 +117,15 @@ export default function Cart() {
                     <td className="fw-semibold">{food.name}</td>
                     <td>{food.qty}</td>
                     <td>{food.size}</td>
-                    <td className="fw-semibold">₹{food.price * food.qty}</td>
+                    <td className="fw-semibold">
+                      ₹{food.price * food.qty}
+                    </td>
                     <td>
                       <button
                         className="btn btn-sm text-danger"
-                        onClick={() => dispatch({ type: "REMOVE", index })}
+                        onClick={() =>
+                          dispatch({ type: "REMOVE", index })
+                        }
                       >
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
@@ -117,7 +139,9 @@ export default function Cart() {
       </div>
 
       <div className="d-flex justify-content-between align-items-center mt-4 flex-wrap">
-        <h4 className="fw-bold mb-3 mb-md-0">Total: ₹{totalPrice}/-</h4>
+        <h4 className="fw-bold mb-3 mb-md-0">
+          Total: ₹{totalPrice}/-
+        </h4>
 
         <button
           className="btn btn-success px-4 py-2"
