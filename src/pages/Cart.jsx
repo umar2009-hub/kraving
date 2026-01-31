@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useCart, useDispatchCart } from "../components/CartContext";
@@ -7,13 +6,11 @@ import { useCart, useDispatchCart } from "../components/CartContext";
 export default function Cart() {
   const data = useCart();
   const dispatch = useDispatchCart();
+  const [orderSuccess, setOrderSuccess] = useState(false); // NEW
 
   if (data.length === 0) {
     return (
-      <div
-        className="d-flex justify-content-center align-items-center"
-        style={{ minHeight: "60vh" }}
-      >
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "60vh" }}>
         <h4 className="text-muted">Your cart is empty</h4>
       </div>
     );
@@ -23,39 +20,47 @@ export default function Cart() {
     try {
       const userEmail = localStorage.getItem("userEmail");
 
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/orderData`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            order_data: data,
-            email: userEmail,
-            order_date: new Date().toDateString(),
-          }),
-        }
-      );
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orderData`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_data: data,
+          email: userEmail,
+          order_date: new Date().toDateString(),
+        }),
+      });
 
-      if (!response.ok) {
-        throw new Error("Checkout failed");
-      }
+      if (!response.ok) throw new Error("Checkout failed");
 
       dispatch({ type: "DROP" });
-      alert("Order placed successfully");
+
+      setOrderSuccess(true); // SHOW ANIMATION
+      setTimeout(() => setOrderSuccess(false), 2500);
+
     } catch (error) {
       console.error(error);
       alert("Something went wrong during checkout");
     }
   };
 
-  const totalPrice = data.reduce(
-    (total, food) => total + food.price * food.qty,
-    0
-  );
+  const totalPrice = data.reduce((total, food) => total + food.price * food.qty, 0);
 
   return (
     <div className="container my-5" style={{ minHeight: "60vh" }}>
       <h2 className="text-center fw-bold mb-4">Your Cart</h2>
+
+      {/* SUCCESS MESSAGE */}
+      {orderSuccess && (
+        <div
+          className="alert alert-success text-center fw-bold"
+          style={{
+            animation: "pop 0.5s ease-in-out",
+            borderRadius: "10px",
+          }}
+        >
+          🎉 Thank you for your order!
+        </div>
+      )}
 
       <div className="card shadow-sm">
         <div className="card-body p-0">
@@ -79,15 +84,11 @@ export default function Cart() {
                     <td className="fw-semibold">{food.name}</td>
                     <td>{food.qty}</td>
                     <td>{food.size}</td>
-                    <td className="fw-semibold">
-                      ₹{food.price * food.qty}
-                    </td>
+                    <td className="fw-semibold">₹{food.price * food.qty}</td>
                     <td>
                       <button
                         className="btn btn-sm text-danger"
-                        onClick={() =>
-                          dispatch({ type: "REMOVE", index })
-                        }
+                        onClick={() => dispatch({ type: "REMOVE", index })}
                       >
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
@@ -101,18 +102,21 @@ export default function Cart() {
       </div>
 
       <div className="d-flex justify-content-between align-items-center mt-4 flex-wrap">
-        <h4 className="fw-bold mb-3 mb-md-0">
-          Total: ₹{totalPrice}/-
-        </h4>
+        <h4 className="fw-bold mb-3 mb-md-0">Total: ₹{totalPrice}/-</h4>
 
-        <button
-          className="btn btn-success px-4 py-2"
-          style={{ borderRadius: "8px" }}
-          onClick={handleCheckout}
-        >
+        <button className="btn btn-success px-4 py-2" style={{ borderRadius: "8px" }} onClick={handleCheckout}>
           Check Out
         </button>
       </div>
+
+      <style>
+        {`
+          @keyframes pop {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+          }
+        `}
+      </style>
     </div>
   );
 }
