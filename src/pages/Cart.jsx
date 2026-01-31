@@ -30,7 +30,8 @@ export default function Cart() {
         name: item.name,
         qty: item.qty,
         size: item.size,
-        price: item.price
+        price: item.price,
+        img: item.img
       }));
 
       const response = await fetch(
