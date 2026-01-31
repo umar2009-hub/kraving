@@ -34,7 +34,14 @@ export default function Login() {
         return;
       }
 
+      // SET AUTH CONTEXT
       setUser(data.user);
+
+      // SAVE EMAIL FOR CHECKOUT
+      if (data.user?.email) {
+        localStorage.setItem("userEmail", data.user.email);
+      }
+
       navigate("/");
     } catch (err) {
       console.error("Login error:", err);
