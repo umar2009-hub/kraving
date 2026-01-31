@@ -10,7 +10,8 @@ export default function Cart() {
   const { user } = useAuth();
   const [orderSuccess, setOrderSuccess] = useState(false);
 
-  if (data.length === 0) {
+  // 🔧 FIX 1: allow success message even if cart becomes empty
+  if (data.length === 0 && !orderSuccess) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "60vh" }}>
         <h4 className="text-muted">Your cart is empty</h4>
@@ -25,7 +26,6 @@ export default function Cart() {
         return;
       }
 
-      // CLEAN ITEMS FOR BACKEND
       const itemsForBackend = data.map((item) => ({
         name: item.name,
         qty: item.qty,
@@ -61,12 +61,13 @@ export default function Cart() {
         return;
       }
 
-      // CLEAR CART
-      dispatch({ type: "DROP" });
-
-      // SUCCESS MESSAGE
+      // 🔧 FIX 2: show animation FIRST, clear cart AFTER delay
       setOrderSuccess(true);
-      setTimeout(() => setOrderSuccess(false), 2500);
+
+      setTimeout(() => {
+        dispatch({ type: "DROP" });
+        setOrderSuccess(false);
+      }, 2500);
 
     } catch (error) {
       console.error("CHECKOUT ERROR:", error);
