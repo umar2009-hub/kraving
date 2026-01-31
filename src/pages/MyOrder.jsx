@@ -92,7 +92,7 @@ export default function MyOrder() {
 
   const fetchMyOrder = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/myOrderData`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/myOrderData`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

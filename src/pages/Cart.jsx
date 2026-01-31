@@ -24,7 +24,7 @@ export default function Cart() {
       const userEmail = localStorage.getItem("userEmail");
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/auth/orderData`,
+        `${import.meta.env.VITE_API_URL}/api/orderData`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
