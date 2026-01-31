@@ -52,6 +52,12 @@ export default function Login() {
   return (
     <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
       <div className="card p-4" style={{ width: "420px" }}>
+
+        {/* HOME BUTTON */}
+        <Link to="/" className="btn btn-outline-success w-100 mb-3">
+          Home
+        </Link>
+
         <h3 className="text-center mb-4">Welcome Back</h3>
 
         <form onSubmit={handleSubmit}>
