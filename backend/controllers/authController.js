@@ -52,22 +52,30 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const accessToken = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
+    // IMPORTANT: payload key must be userId
+    const accessToken = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
 
-    const isProd = process.env.NODE_ENV === "production";
+    const refreshToken = jwt.sign(
+      { userId: user._id },
+      process.env.REFRESH_SECRET,
+      { expiresIn: "7d" }
+    );
 
     res
       .cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: isProd,
-        sameSite: isProd ? "none" : "lax",
+        secure: true,          // FORCE TRUE for production
+        sameSite: "none",
         maxAge: 15 * 60 * 1000
       })
       .cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: isProd,
-        sameSite: isProd ? "none" : "lax",
+        secure: true,
+        sameSite: "none",
         maxAge: 7 * 24 * 60 * 60 * 1000
       })
       .status(200)
@@ -76,7 +84,7 @@ exports.login = async (req, res) => {
         user: {
           id: user._id,
           name: user.name,
-          email: user.email,   // 🔥 IMPORTANT FIX
+          email: user.email,
           role: user.role
         }
       });
@@ -86,18 +94,10 @@ exports.login = async (req, res) => {
   }
 };
 
-// 🔍 GET CURRENT USER (/api/auth/me)
+// 🔍 GET CURRENT USER
 exports.getMe = async (req, res) => {
   try {
-    const token = req.cookies.accessToken;
-
-    if (!token) {
-      return res.status(401).json({ error: "No token" });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    const user = await User.findById(decoded.id).select("name email role");
+    const user = await User.findById(req.userId).select("name email role");
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
