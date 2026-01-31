@@ -9,6 +9,7 @@ export default function Signup() {
     geolocation: ""
   });
 
+  const [successMsg, setSuccessMsg] = useState(""); // NEW
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -38,8 +39,14 @@ export default function Signup() {
         return;
       }
 
-      alert("Account created successfully. Please login.");
-      navigate("/login");
+      // 🎉 SHOW ANIMATED MESSAGE
+      setSuccessMsg("🎉 Registered Successfully!");
+
+      // Redirect after 2 sec
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
+
     } catch (err) {
       console.error("Signup error:", err);
       alert("Something went wrong");
@@ -57,12 +64,24 @@ export default function Signup() {
     <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
       <div className="card p-4" style={{ width: "480px" }}>
 
-        {/* HOME BUTTON */}
         <Link to="/" className="btn btn-outline-success w-100 mb-3">
           Home
         </Link>
 
-        <h3 className="text-center mb-4">Create Account</h3>
+        <h3 className="text-center mb-3">Create Account</h3>
+
+        {/* SUCCESS ANIMATION */}
+        {successMsg && (
+          <div
+            className="alert alert-success text-center fw-bold"
+            style={{
+              animation: "fadeIn 0.6s ease-in-out",
+              borderRadius: "10px"
+            }}
+          >
+            {successMsg}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <input className="form-control mb-2" name="name" placeholder="Name" onChange={onChange} required />
@@ -77,6 +96,16 @@ export default function Signup() {
           </Link>
         </form>
       </div>
+
+      {/* SIMPLE CSS ANIMATION */}
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+        `}
+      </style>
     </div>
   );
 }
