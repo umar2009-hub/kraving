@@ -17,31 +17,46 @@ export default function Cart() {
   }
 
   const handleCheckout = async () => {
-    try {
-      const userEmail = localStorage.getItem("userEmail");
+  try {
+    const userEmail = localStorage.getItem("userEmail");
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orderData`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          order_data: data,
-          email: userEmail,
-          order_date: new Date().toDateString(),
-        }),
-      });
-
-      if (!response.ok) throw new Error("Checkout failed");
-
-      dispatch({ type: "DROP" });
-
-      setOrderSuccess(true); // SHOW ANIMATION
-      setTimeout(() => setOrderSuccess(false), 2500);
-
-    } catch (error) {
-      console.error(error);
-      alert("Something went wrong during checkout");
+    if (!userEmail) {
+      alert("Please login again");
+      return;
     }
-  };
+
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orderData`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        email: userEmail,
+        order_data: [
+          {
+            order_date: new Date().toDateString(),
+            items: data
+          }
+        ]
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      console.error(err);
+      throw new Error("Checkout failed");
+    }
+
+    dispatch({ type: "DROP" });
+
+    setOrderSuccess(true);
+    setTimeout(() => setOrderSuccess(false), 2500);
+
+  } catch (error) {
+    console.error(error);
+    alert("Something went wrong during checkout");
+  }
+};
+
 
   const totalPrice = data.reduce((total, food) => total + food.price * food.qty, 0);
 
