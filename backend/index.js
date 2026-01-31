@@ -37,12 +37,18 @@ mongoDBconnect()
   .then(() => {
     console.log("✅ DB connected, registering routes...");
 
+    // DATA ROUTES
     app.use("/api", require("./routes/CreateUser"));
     app.use("/api", require("./routes/DisplayData"));
     app.use("/api", require("./routes/OrderData"));
 
-    // Auth routes
+    // AUTH ROUTES  🔥 IMPORTANT
     app.use("/api/auth", require("./routes/auth"));
+
+    // 404 FALLBACK (helps debugging)
+    app.use((req, res) => {
+      res.status(404).json({ error: "Route not found" });
+    });
 
     app.listen(port, () => {
       console.log(`✅ Server running on port ${port}`);
