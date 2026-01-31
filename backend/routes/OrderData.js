@@ -7,15 +7,16 @@ const Order = require("../models/Order");
 // CREATE ORDER
 router.post("/orderData", async (req, res) => {
   try {
-    const { email, order_data, order_date } = req.body;
+    const { email, order_data } = req.body;
 
-    if (!email || !order_data || !order_date) {
-      return res.status(400).json({ success: false });
+    if (!email || !order_data || !order_data.length) {
+      return res.status(400).json({ success: false, message: "Missing data" });
     }
 
+    // FRONTEND SENDS ARRAY → TAKE FIRST OBJECT
     const newOrder = {
-      order_date,
-      items: order_data,
+      order_date: order_data[0].order_date,
+      items: order_data[0].items
     };
 
     const existingOrder = await Order.findOne({ email });
@@ -23,7 +24,7 @@ router.post("/orderData", async (req, res) => {
     if (!existingOrder) {
       await Order.create({
         email,
-        order_data: [newOrder],
+        order_data: [newOrder]
       });
     } else {
       await Order.findOneAndUpdate(
@@ -34,7 +35,7 @@ router.post("/orderData", async (req, res) => {
 
     res.status(200).json({ success: true });
   } catch (error) {
-    console.error(error);
+    console.error("ORDER ERROR:", error);
     res.status(500).json({ success: false });
   }
 });
@@ -42,10 +43,16 @@ router.post("/orderData", async (req, res) => {
 // FETCH ORDERS
 router.post("/myOrderData", async (req, res) => {
   try {
-    const userOrders = await Order.findOne({ email: req.body.email });
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false });
+    }
+
+    const userOrders = await Order.findOne({ email });
 
     res.status(200).json({
-      orderData: userOrders ? userOrders.order_data : [],
+      orderData: userOrders ? userOrders.order_data : []
     });
   } catch (error) {
     console.error("MYORDER ERROR:", error);
