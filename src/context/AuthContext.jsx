@@ -10,15 +10,13 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/auth/me`,
-          {
-            credentials: "include"
-          }
-        );
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+          credentials: "include",
+        });
 
         if (res.ok) {
           const data = await res.json();
+          console.log("AUTH ME RESPONSE:", data); // ADD THIS
           setUser(data.user);
         } else {
           setUser(null);
@@ -37,13 +35,10 @@ export const AuthProvider = ({ children }) => {
   // 🚪 LOGOUT FUNCTION (THIS WAS MISSING)
   const logout = async () => {
     try {
-      await fetch(
-        `${import.meta.env.VITE_API_URL}/api/auth/logout`,
-        {
-          method: "POST",
-          credentials: "include"
-        }
-      );
+      await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
     } catch (err) {
       console.error("Logout failed", err);
     } finally {
@@ -52,9 +47,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, setUser, logout, loading }}
-    >
+    <AuthContext.Provider value={{ user, setUser, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
