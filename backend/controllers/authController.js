@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const {
   generateAccessToken,
   generateRefreshToken
@@ -54,13 +55,12 @@ exports.login = async (req, res) => {
     const accessToken = generateAccessToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
 
-    // 🌍 ENV-AWARE COOKIE CONFIG
     const isProd = process.env.NODE_ENV === "production";
 
     res
       .cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: isProd,                  // ❗ false on localhost, true on HTTPS
+        secure: isProd,
         sameSite: isProd ? "none" : "lax",
         maxAge: 15 * 60 * 1000
       })
@@ -76,11 +76,43 @@ exports.login = async (req, res) => {
         user: {
           id: user._id,
           name: user.name,
+          email: user.email,   // 🔥 IMPORTANT FIX
           role: user.role
         }
       });
   } catch (err) {
     console.error("Login error:", err);
     return res.status(500).json({ error: "Server error" });
+  }
+};
+
+// 🔍 GET CURRENT USER (/api/auth/me)
+exports.getMe = async (req, res) => {
+  try {
+    const token = req.cookies.accessToken;
+
+    if (!token) {
+      return res.status(401).json({ error: "No token" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id).select("name email role");
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(200).json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    console.error("Auth me error:", err);
+    res.status(401).json({ error: "Invalid token" });
   }
 };
