@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useCart, useDispatchCart } from "../components/CartContext";
+import { useAuth } from "../context/AuthContext"; // NEW
 
 export default function Cart() {
   const data = useCart();
   const dispatch = useDispatchCart();
-  const [orderSuccess, setOrderSuccess] = useState(false); // NEW
+  const { user } = useAuth(); // NEW
+  const [orderSuccess, setOrderSuccess] = useState(false);
 
   if (data.length === 0) {
     return (
@@ -17,46 +19,45 @@ export default function Cart() {
   }
 
   const handleCheckout = async () => {
-  try {
-    const userEmail = localStorage.getItem("userEmail");
+    try {
+      const userEmail = user?.email;
 
-    if (!userEmail) {
-      alert("Please login again");
-      return;
+      if (!userEmail) {
+        alert("Please login again");
+        return;
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orderData`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          email: userEmail,
+          order_data: [
+            {
+              order_date: new Date().toDateString(),
+              items: data
+            }
+          ]
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        console.error(err);
+        throw new Error("Checkout failed");
+      }
+
+      dispatch({ type: "DROP" });
+
+      setOrderSuccess(true);
+      setTimeout(() => setOrderSuccess(false), 2500);
+
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong during checkout");
     }
-
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orderData`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
-        email: userEmail,
-        order_data: [
-          {
-            order_date: new Date().toDateString(),
-            items: data
-          }
-        ]
-      }),
-    });
-
-    if (!response.ok) {
-      const err = await response.json();
-      console.error(err);
-      throw new Error("Checkout failed");
-    }
-
-    dispatch({ type: "DROP" });
-
-    setOrderSuccess(true);
-    setTimeout(() => setOrderSuccess(false), 2500);
-
-  } catch (error) {
-    console.error(error);
-    alert("Something went wrong during checkout");
-  }
-};
-
+  };
 
   const totalPrice = data.reduce((total, food) => total + food.price * food.qty, 0);
 
@@ -64,7 +65,6 @@ export default function Cart() {
     <div className="container my-5" style={{ minHeight: "60vh" }}>
       <h2 className="text-center fw-bold mb-4">Your Cart</h2>
 
-      {/* SUCCESS MESSAGE */}
       {orderSuccess && (
         <div
           className="alert alert-success text-center fw-bold"
@@ -119,7 +119,11 @@ export default function Cart() {
       <div className="d-flex justify-content-between align-items-center mt-4 flex-wrap">
         <h4 className="fw-bold mb-3 mb-md-0">Total: ₹{totalPrice}/-</h4>
 
-        <button className="btn btn-success px-4 py-2" style={{ borderRadius: "8px" }} onClick={handleCheckout}>
+        <button
+          className="btn btn-success px-4 py-2"
+          style={{ borderRadius: "8px" }}
+          onClick={handleCheckout}
+        >
           Check Out
         </button>
       </div>
